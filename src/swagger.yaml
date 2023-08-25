@@ -1,0 +1,48 @@
+openapi: 3.0.0
+info:
+  title: Users API
+  description: Optional multiline or single-line description in [CommonMark](http://commonmark.org/help/) or HTML.
+  version: 1.0.7
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Users service version 1
+  - url: http://localhost:3000/api/v2
+    description: Users service version 2
+    
+paths:
+  /users:
+    get:
+      summary: Returns a list of users.
+      description: You also can query users by filter
+      responses:
+        200:
+          description: Array of users
+          headers:
+            x-api-version:
+              schema:
+                type: string
+              description: Api version.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: The user ID.
+          example: 1
+        name:
+          type: string
+          description: The user full name.
+          example: John Dou
+        email:
+          type: string
+          description: The user email.
+          example: jdou@example.com

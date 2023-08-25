@@ -23,7 +23,7 @@ usersRouter.post('/', (req, res) => {
 });
 
 // Read
-usersRouter.get('/', [authMiddleware], (req, res) => {
+usersRouter.get('/', (req, res) => {
   try {
     let users;
     const { email } = req.query;
@@ -36,9 +36,13 @@ usersRouter.get('/', [authMiddleware], (req, res) => {
       users = usersStorage.findAll();
     }
 
+    const usersWithoutPassword = users.map(({ password, ...user }) => user);
+
+    res.setHeader('x-api-version', 'v1');
+
     res.status(200).json({
       status: 'ok',
-      data: users,
+      data: usersWithoutPassword,
     });
   } catch (error) {
     res.status(400).json({

@@ -13,7 +13,10 @@ class Users {
   }
 
   findAll() {
-    return this.users;
+    return this.users.map((user, id) => ({
+      ...user,
+      id,
+    }));
   }
 
   findById(id) {
