@@ -1,8 +1,8 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 
-const { usersStorage } = require('../storage');
-const { JWT_PASSWORD } = require('../constants');
+const { usersStorage } = require('../../store/users');
+const { JWT_PASSWORD } = require('../../common/constants');
 
 const authRouter = express.Router();
 
@@ -11,7 +11,13 @@ authRouter.post('/login', (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const user = usersStorage.findByEmail(email);
+    console.log('req.body', req.body);
+    if (!email) {
+      throw new Error('Wrong credentials');
+    }
+
+    const user = usersStorage.findByFilter(email);
+    console.log('user', user);
 
     if (user.password !== password) {
       throw new Error('Wrong credentials');

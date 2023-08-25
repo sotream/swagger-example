@@ -1,0 +1,249 @@
+openapi: 3.0.0
+info:
+  title: Users API
+  description: Optional multiline or single-line description in [CommonMark](http://commonmark.org/help/) or HTML.
+  version: 1.0.7
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Users service version 1
+  - url: http://localhost:3000/api/v2
+    description: Users service version 2
+
+paths:
+  /auth/login:
+    post:
+      summary: Authenticate user
+      tags:
+        - Auth
+      requestBody:
+        description: Sign up **user**
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequestBody'
+      responses:
+        200:
+          description: Authenticated user
+
+  /users:
+    post:
+      summary: Create user
+      tags:
+        - Users
+      requestBody:
+        description: Sign up **user**
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequestBody'
+      responses:
+        201:
+          headers:
+            x-api-version:
+              schema:
+                type: string
+              description: Api version
+          description: Created user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+    get:
+      summary: Returns a list of users
+      description: You also can query users by filter
+      tags:
+        - Users
+      parameters:
+        - in: query
+          name: 'filter'
+          schema:
+            type: string
+          required: false
+          description: User email to filter users
+      responses:
+        200:
+          description: Array of users
+          headers:
+            x-api-version:
+              schema:
+                type: string
+              description: Api version
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - 'ok'
+                      - 'error'
+                    example: 'ok'
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+        401:
+          description: Unauthorized error
+  /users/{id}:
+    get:
+      summary: Returns a user by identificator
+      description: Docs description in *CommonMark*
+      tags:
+        - Users
+      parameters:
+        - in: path
+          name: 'id'
+          schema:
+            type: string
+          required: true
+          description: User id
+      responses:
+        200:
+          description: Users entity
+          headers:
+            x-api-version:
+              schema:
+                type: string
+              description: Api version
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - 'ok'
+                      - 'error'
+                    example: 'ok'
+                  data:
+                    $ref: '#/components/schemas/User'
+
+    put:
+      summary: Update user
+      tags:
+        - Users
+      parameters:
+        - in: path
+          name: 'id'
+          schema:
+            type: string
+          required: true
+          description: User id
+      requestBody:
+        description: Update **user**
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequestBody'
+      responses:
+        201:
+          description: Updated user
+          headers:
+            x-api-version:
+              schema:
+                type: string
+              description: Api version
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+
+    delete:
+      summary: Delete user
+      parameters:
+        - in: path
+          name: 'id'
+          schema:
+            type: string
+          required: true
+          description: User id
+      tags:
+        - Users
+      responses:
+        204:
+          description: User deleted
+          headers:
+            x-api-version:
+              schema:
+                type: string
+              description: Api version
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: The user ID
+          example: '99VBHFXNB22J'
+        name:
+          type: string
+          description: The user full name
+          example: John Dou
+        email:
+          type: string
+          description: The user email
+          example: jdou@example.com
+
+    UserRequestBody:
+      type: object
+      properties:
+        name:
+          type: string
+          required: true
+          description: The user full name
+          example: Jane Dou
+        email:
+          type: string
+          required: true
+          description: The user email
+          example: jadou@test.com
+        password:
+          type: string
+          required: true
+          description: The user password
+          example: 'super-password'
+
+    LoginRequestBody:
+      type: object
+      properties:
+        email:
+          type: string
+          required: true
+          description: The user email
+          example: jdou@example.com
+        password:
+          type: string
+          required: true
+          description: The user password
+          example: 'super-password'
+
+    UserResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - 'ok'
+            - 'error'
+          example: 'ok'
+        data:
+          $ref: '#/components/schemas/User'
+
+    LoginResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - 'ok'
+            - 'error'
+          example: 'ok'
+        data:
+          $ref: '#/components/schemas/User'

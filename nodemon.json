@@ -1,0 +1,14 @@
+{
+  "verbose": false,
+  "watch": [
+    "src"
+  ],
+  "ext": ".js, .yaml",
+  "ignore": [
+    "*.test.ts"
+  ],
+  "delay": 1500,
+  "execMap": {
+    "js": "node"
+  }
+}

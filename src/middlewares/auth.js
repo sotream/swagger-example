@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 
-const { JWT_PASSWORD } = require('./constants');
+const { JWT_PASSWORD } = require('../common/constants');
 
 // eslint-disable-next-line consistent-return
 const authMiddleware = (req, res, next) => {
