@@ -1,51 +1,34 @@
 const path = require('node:path');
-const express = require('express');
-const bodyParser = require('body-parser');
+const fs = require('node:fs');
 const log4js = require('log4js');
+const express = require('express');
 const swaggerUi = require('swagger-ui-express');
-const fs = require('fs');
 const YAML = require('yaml');
+const { app } = require('./server');
 
-const { usersRouter } = require('./routers/users');
-const { authRouter } = require('./routers/auth');
-
-const file = fs.readFileSync(path.resolve('./src/docs/swagger.yaml'), 'utf8');
-const swaggerDocument = YAML.parse(file);
-
-const app = express();
-const port = 3000;
-
-log4js.configure({
-  appenders: {
-    out: {
-      type: 'stdout',
-      layout: {
-        type: 'pattern',
-        pattern: '%[[%d{yyyy-MM-dd hh:mm:ss.SSS}] [%p] %c -%] %m',
-      },
-    },
-  },
-  categories: { default: { appenders: ['out'], level: 'debug' } },
-});
-
-const log = log4js.getLogger('main');
+const log = log4js.getLogger('server');
 
 log.level = 'debug';
 
-app.disable('x-powered-by');
+const port = parseInt(process.env.PORT) || 3000;
+const file = fs.readFileSync(path.resolve('./src/docs/swagger.yaml'), 'utf8');
+const swaggerDocument = YAML.parse(file);
 
 const options = {
   explorer: false,
+  //   customCssUrl: '/static/css/theme-material.css',
+  //   customCssUrl: '/static/css/theme-flattop.css',
 };
 
-app.use(
-  bodyParser.json({
-    limit: '1kb',
-  }),
-);
+swaggerDocument.info.version = process.env.npm_package_version;
 
-app.use('/api/v1/auth', authRouter);
-app.use('/api/v1/users', usersRouter);
+app.use(express.static(__dirname));
+
+app.use('*.css', (req, res, next) => {
+  res.set('Content-Type', 'text/css');
+  next();
+});
+
 app.use('/docs/v1', swaggerUi.serve, swaggerUi.setup(swaggerDocument, options));
 
 app.listen(port, () => {

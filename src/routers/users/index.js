@@ -1,22 +1,36 @@
 const express = require('express');
+const log4js = require('log4js');
 
 const { usersStorage } = require('../../store/users');
 const { authMiddleware } = require('../../middlewares/auth');
+const { getAccessToken } = require('../../utils/auth');
 
 const usersRouter = express.Router();
+
+const log = log4js.getLogger('authRouter');
+
+log.level = 'debug';
 
 // Create
 usersRouter.post('/', (req, res) => {
   try {
     res.setHeader('x-api-version', 'v1');
 
+    log.info('Create user request body', req.body);
+
     const createdUser = usersStorage.create(req.body);
+    const accessToken = getAccessToken({ email: createdUser.email });
 
     res.status(201).json({
       status: 'ok',
-      data: createdUser,
+      data: {
+        ...createdUser,
+        accessToken,
+      },
     });
   } catch (error) {
+    log.error('Create user error', error);
+
     res.status(error.code || 400).json({
       status: 'error',
       data: {

@@ -1,8 +1,9 @@
-openapi: 3.0.0
+openapi: 3.0.3
+
 info:
   title: Users API
   description: Optional multiline or single-line description in [CommonMark](http://commonmark.org/help/) or HTML.
-  version: 1.0.7
+  version: 0.0.0
 servers:
   - url: 'http://localhost:3000/api/v1'
     description: Users service version 1
@@ -63,14 +64,12 @@ paths:
         201:
           headers:
             x-api-version:
-              schema:
-                type: string
-              description: Api version
+              $ref: '#/components/headers/xApiVersion'
           description: Created user
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserResponse'
+                $ref: '#/components/schemas/UserWithTokenResponse'
         400:
           description: User validation error
           content:
@@ -86,26 +85,14 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - in: query
-          name: 'filter'
-          schema:
-            type: string
-          required: false
-          description: User email to filter users
-        - in: query
-          name: 'limit'
-          schema:
-            type: integer
-          required: false
-          description: User query page limit
+        - $ref: '#/components/parameters/filterParam'
+        - $ref: '#/components/parameters/limitParam'
       responses:
         200:
           description: Array of users
           headers:
             x-api-version:
-              schema:
-                type: string
-              description: Api version
+              $ref: '#/components/headers/xApiVersion'
           content:
             application/json:
               schema:
@@ -115,7 +102,6 @@ paths:
                     type: string
                     enum:
                       - 'ok'
-                      - 'error'
                     example: 'ok'
                   data:
                     type: array
@@ -138,33 +124,17 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - in: path
-          name: 'id'
-          schema:
-            type: integer
-          required: true
-          description: User id
+        - $ref: '#/components/parameters/idParam'
       responses:
         200:
           description: Users entity
           headers:
             x-api-version:
-              schema:
-                type: string
-              description: Api version
+              $ref: '#/components/headers/xApiVersion'
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    enum:
-                      - 'ok'
-                      - 'error'
-                    example: 'ok'
-                  data:
-                    $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/UserResponse'
         401:
           description: User not authorized error
           content:
@@ -185,12 +155,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - in: path
-          name: 'id'
-          schema:
-            type: integer
-          required: true
-          description: User id
+        - $ref: '#/components/parameters/idParam'
       requestBody:
         description: Update **user**
         required: true
@@ -203,9 +168,7 @@ paths:
           description: Updated user
           headers:
             x-api-version:
-              schema:
-                type: string
-              description: Api version
+              $ref: '#/components/headers/xApiVersion'
           content:
             application/json:
               schema:
@@ -230,20 +193,13 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - in: path
-          name: 'id'
-          schema:
-            type: integer
-          required: true
-          description: User id
+        - $ref: '#/components/parameters/idParam'
       responses:
         204:
           description: User deleted
           headers:
             x-api-version:
-              schema:
-                type: string
-              description: Api version
+              $ref: '#/components/headers/xApiVersion'
         400:
           description: User validation error
           content:
@@ -269,7 +225,36 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      
+
+  parameters:
+    filterParam:
+      name: 'filter'
+      in: query
+      schema:
+        type: string
+      required: false
+      description: User email or name
+    limitParam:
+      name: limit
+      in: query
+      schema:
+        type: integer
+      required: false
+      description: User query page limit
+    idParam:
+        name: 'id'
+        in: path
+        schema:
+          type: integer
+        required: true
+        description: User id
+
+  headers:
+    xApiVersion:
+      schema:
+        type: string
+      description: Api version
+
   schemas:
     User:
       type: object
@@ -277,7 +262,6 @@ components:
         id:
           type: integer
           description: The user ID
-          example: 1
         name:
           type: string
           description: The user full name
@@ -289,14 +273,22 @@ components:
         age:
           type: integer
           description: The user age
-          example: 27
+      example:
+        id: 1
+        name: John Dou
+        email: jdou@example.com
+        age: 27
 
     UserRequestBody:
       type: object
+      required:
+        - name
+        - email
+        - password
+        - age
       properties:
         name:
           type: string
-          required: true
           minLength: 3
           maxLength: 25
           description: The user full name
@@ -304,18 +296,15 @@ components:
         email:
           type: string
           format: email
-          required: true
           description: The user email
           example: jadou@test.com
         password:
           type: string
-          required: true
           minLength: 8
           description: The user password
           example: 'super-password'
         age:
           type: integer
-          required: true
           minimum: 18
           exclusiveMinimum: false
           maximum: 100
@@ -324,60 +313,71 @@ components:
           example: 25
 
     UserRequestUpdateBody:
-      type: object
-      properties:
-        name:
-          type: string
-          minLength: 3
-          maxLength: 25
-          description: The user full name
-          example: Jackie Smith
-        email:
-          type: string
-          format: email
-          description: The user email
-          example: jackie.smith@test.com
-        password:
-          type: string
-          minLength: 8
-          description: The user password
-          example: 'password'
-        age:
-          type: integer
-          minimum: 18
-          exclusiveMinimum: false
-          maximum: 100
-          exclusiveMaximum: true
-          description: The user age
-          example: 31
+      allOf:
+        - $ref: '#/components/schemas/UserRequestBody'
+        - type: object
+          required: false
 
     LoginRequestBody:
       type: object
+      required:
+        - email
+        - password
       properties:
         email:
           type: string
           format: email
-          required: true
           description: The user email
-          example: jdou@test.com
         password:
           type: string
-          required: true
           minLength: 3
           description: The user password
-          example: '12345678'
+      example:
+        email: jdou@test.com
+        password: '12345678'
 
     UserResponse:
       type: object
+      required:
+        - status
+        - data
       properties:
         status:
           type: string
           enum:
             - 'ok'
-            - 'error'
           example: 'ok'
         data:
-          $ref: '#/components/schemas/User'
+          allOf:
+            - $ref: '#/components/schemas/User'
+            - type: object
+              required:
+                - id
+                - name
+                - email
+                - age
+
+    UserWithTokenResponse:
+      allOf:
+        - $ref: '#/components/schemas/UserResponse'
+        - type: object
+          properties:
+            data:
+              allOf:
+              - $ref: '#/components/schemas/User'
+              - type: object
+                required:
+                  - id
+                  - name
+                  - email
+                  - age
+                  - accessToken
+                properties:
+                  accessToken:
+                    type: string
+                    required: true
+                    description: Access token
+                    example: 'eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Impkb3VAdGVzdC5jb20iLCJpYXQiOjE2OTM2NTE5ODUsImV4cCI6MTY5MzY1NTU4NX0.asGtJQ1Qu6xU0l0bXF1zLyzyFq_3bTE3vXxcQxZCr_K_2cl6sg9NWyLA_cmPfenn2i4DdF_wW67vQ4oCMmA8DQ'
 
     LoginResponse:
       type: object
@@ -386,7 +386,6 @@ components:
           type: string
           enum:
             - 'ok'
-            - 'error'
           example: 'ok'
         data:
           type: object
@@ -397,7 +396,7 @@ components:
               description: Access token
               example: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Impkb3VAdGVzdC5jb20iLCJpYXQiOjE2OTM2NTE5ODUsImV4cCI6MTY5MzY1NTU4NX0.asGtJQ1Qu6xU0l0bXF1zLyzyFq_3bTE3vXxcQxZCr_K_2cl6sg9NWyLA_cmPfenn2i4DdF_wW67vQ4oCMmA8DQ
 
-    NotAuthorizedResponse:
+    BaseErrorResponse:
       type: object
       properties:
         status:
@@ -406,7 +405,6 @@ components:
             - 'error'
           required: true
           description: Request status
-          example: error
         data:
           type: object
           properties: 
@@ -414,42 +412,30 @@ components:
               type: string
               required: true
               description: Error message
-              example: "Wrong credentials"
+    
+    NotAuthorizedResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseErrorResponse'
+        - type: object
+          example:
+            status: 'error'
+            data:
+              message: 'Wrong credentials'
 
     NotFoundResponse:
-      type: object
-      properties:
-        status:
-          type: string
-          enum:
-            - 'error'
-          required: true
-          description: Request status
-          example: error
-        data:
-          type: object
-          properties: 
-            message:
-              type: string
-              required: true
-              description: Error message
-              example: "User with id '1' not found"
+      allOf:
+        - $ref: '#/components/schemas/BaseErrorResponse'
+        - type: object
+          example:
+            status: 'error'
+            data:
+              message: "User with id '1' not found"
 
     BadRequestResponse:
-      type: object
-      properties:
-        status:
-          type: string
-          enum:
-            - 'error'
-          required: true
-          description: Request status
-          example: error
-        data:
-          type: object
-          properties: 
-            message:
-              type: string
-              required: true
-              description: Error message
-              example: "User params are not valid"
+      allOf:
+        - $ref: '#/components/schemas/BaseErrorResponse'
+        - type: object
+          example:
+            status: 'error'
+            data:
+              message: 'User params are not valid'

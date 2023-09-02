@@ -4,7 +4,7 @@ const log4js = require('log4js');
 
 const { NotAuthorizedError } = require('../../common/errors');
 const { usersStorage } = require('../../store/users');
-const { JWT_PASSWORD } = require('../../common/constants');
+const { getAccessToken } = require('../../utils/auth');
 
 const authRouter = express.Router();
 
@@ -37,10 +37,7 @@ authRouter.post('/login', (req, res) => {
       throw new NotAuthorizedError('Wrong credentials');
     }
 
-    const accessToken = jwt.sign({ email: user.email }, JWT_PASSWORD, {
-      algorithm: 'HS512',
-      expiresIn: '1h',
-    });
+    const accessToken = getAccessToken({ email: user.email });
 
     res.status(200).json({
       status: 'ok',

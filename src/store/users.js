@@ -36,13 +36,12 @@ class Users {
 
     this.#users.set(userId, newUser);
 
-    // eslint-disable-next-line no-param-reassign
-    delete newUser.password;
-
     const createdUser = {
       ...newUser,
       id: userId,
     };
+
+    delete createdUser.password;
 
     this.log.debug('User id=', userId, 'successfully created. Created user=', createdUser);
 
@@ -60,7 +59,7 @@ class Users {
     return users;
   }
 
-  findById(userId) {
+  findById(userId, withPassword = false) {
     const userEntry = Array.from(this.#users).find(([id]) => Number(userId) === id);
 
     if (!userEntry) {
@@ -73,6 +72,10 @@ class Users {
       ...user,
       id,
     };
+
+    if (!withPassword) {
+      delete userEntity.password;
+    }
 
     this.log.debug('Get user by id=', userId, 'user=', userEntity);
 
@@ -124,6 +127,8 @@ class Users {
 
     const newUser = { ...user, ...data };
 
+    delete newUser.password;
+
     this.#users.set(Number(id), newUser);
 
     this.log.debug('Update user by user id=', id, 'data to update=', data, 'updated user=', newUser);
@@ -150,6 +155,11 @@ class Users {
     this.log.debug('User with id=', id, 'removed successfully');
 
     return null;
+  }
+
+  clear() {
+    this.#users.clear();
+    this.#id = 0;
   }
 }
 
