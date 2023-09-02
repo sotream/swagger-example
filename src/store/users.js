@@ -1,94 +1,120 @@
-const { generateId } = require('../utils')
+const log4js = require('log4js');
+
+const { NotFoundError } = require('../common/errors');
 
 class Users {
   #users = new Map();
+  #id = 0;
 
   constructor(users) {
+    this.log = log4js.getLogger('usersStorage');
+    this.log.level = 'debug';
+
     for (const user of users) {
-      this.#users.set(generateId(), user)
+      this.#users.set(++this.#id, user);
     }
   }
 
   create(newUser) {
-    if (!user.name || !user.email || !user.password) {
+    if (!newUser.name || !newUser.email || !newUser.password) {
       throw new Error('User params are not valid');
     }
 
-    const usersArray = Array.from(this.#users)
+    const usersArray = Array.from(this.#users);
 
-    for (const [,user] of usersArray) {
+    for (const [, user] of usersArray) {
       if (user.email === newUser.email) {
         throw new Error('user already exists');
       }
     }
 
-    const userId = generateId()
-    this.#users.set(userId, user);
+    const userId = ++this.#id;
 
-    delete user.password;
+    this.#users.set(++this.#id, newUser);
 
-    return {
-      ...user,
-      id: userId
+    // eslint-disable-next-line no-param-reassign
+    delete newUser.password;
+
+    const createdUser = {
+      ...newUser,
+      id: userId,
     };
+
+    this.log.debug('User id=', userId, 'successfully created. Created user=', createdUser);
+
+    return createdUser;
   }
 
   findAll() {
-    return Array.from(this.#users).map(([id, user]) => ({
+    const users = Array.from(this.#users).map(([id, user]) => ({
       ...user,
       id,
     }));
+
+    this.log.debug('Stored users=', users);
+
+    return users;
   }
 
   findById(userId) {
-    const userEntry = Array.from(this.#users).find(([id]) => {
-      return userId === id
-    });
+    const userEntry = Array.from(this.#users).find(([id]) => userId === id);
 
     if (!userEntry) {
-      throw new Error(`User with id '${userId}' not found`);
+      throw new NotFoundError(`User with id '${userId}' not found`);
     }
 
     const [id, user] = userEntry;
 
-    return {
+    const userEntity = {
       ...user,
-      id
-    }
+      id,
+    };
+
+    this.log.debug('Get user by id=', userId, 'user=', userEntity);
+
+    return userEntity;
   }
 
   findByFilter(filter, withPassword = false) {
-    const usersArray = Array.from(this.#users)
+    const usersArray = Array.from(this.#users);
+    const lowerCasedFilter = filter.toLowerCase();
     const filteredUserEntries = usersArray.filter(([, user]) => {
-      return user.email.toLowerCase().includes(filter.toLowerCase()) || user.name.toLowerCase().includes(filter.toLowerCase())
+      const email = user.email.toLowerCase();
+      const name = user.name.toLowerCase();
+
+      return email.includes(lowerCasedFilter) || name.includes(lowerCasedFilter);
     });
 
     const users = filteredUserEntries.map(([id, { password, ...user }]) => {
       const result = {
         ...user,
-        id
-      }
+        id,
+      };
 
       if (withPassword) {
-        result.password = password
+        result.password = password;
       }
 
-      return result
-    })
+      return result;
+    });
 
-    return users
+    this.log.debug('Get user by filter=', `'${filter}'`, 'users=', users);
+
+    return users;
   }
 
   updateById(id, data) {
-    const user = this.#users.get(id)
+    const user = this.#users.get(id);
 
     if (user) {
-      throw new Error(`User with id '${id}' not found`);
+      throw new NotFoundError(`User with id '${id}' not found`);
     }
 
-    const newUser = { ...user, ...data }
+    const newUser = { ...user, ...data };
 
-    this.#users.set(id, newUser)
+    this.#users.set(id, newUser);
+
+    this.log.debug('Update user by user id=', id, 'data to update=', data, 'updated user=', newUser);
 
     return {
       ...newUser,
@@ -97,13 +123,15 @@ class Users {
   }
 
   deleteById(id) {
-    const isUserExists = this.#users.has(id)
+    const isUserExists = this.#users.has(id);
 
     if (isUserExists) {
-      throw new Error(`User with id '${id}' not found`);
+      throw new NotFoundError(`User with id '${id}' not found`);
     }
 
     this.#users.delete(id);
+
+    this.log.debug('User with id=', id, 'removed successfully');
 
     return null;
   }
@@ -113,12 +141,12 @@ const usersStorage = new Users([
   {
     name: 'John Dou',
     email: 'jdou@test.com',
-    password: '123456',
+    password: '12345678',
   },
   {
     name: 'Joe Dou',
     email: 'jedou@test.com',
-    password: '654321',
+    password: '87654321',
   },
 ]);
 

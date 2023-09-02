@@ -15,7 +15,7 @@ usersRouter.post('/', (req, res) => {
       data: usersStorage.create(req.body),
     });
   } catch (error) {
-    res.status(400).json({
+    res.status(error.code || 400).json({
       status: 'error',
       data: {
         message: error.message || 'Internal error',
@@ -24,8 +24,8 @@ usersRouter.post('/', (req, res) => {
   }
 });
 
-// Read
-usersRouter.get('/', (req, res) => {
+// Read all users
+usersRouter.get('/', [authMiddleware], (req, res) => {
   try {
     let users;
     const { filter } = req.query;
@@ -45,7 +45,7 @@ usersRouter.get('/', (req, res) => {
       data: usersWithoutPassword,
     });
   } catch (error) {
-    res.status(400).json({
+    res.status(error.code || 400).json({
       status: 'error',
       data: {
         message: error.message || 'Internal error',
@@ -55,7 +55,7 @@ usersRouter.get('/', (req, res) => {
 });
 
 // Read by id
-usersRouter.get('/:userId', (req, res) => {
+usersRouter.get('/:userId', [authMiddleware], (req, res) => {
   try {
     const { userId } = req.params;
 
@@ -68,7 +68,7 @@ usersRouter.get('/:userId', (req, res) => {
       data: user,
     });
   } catch (error) {
-    res.status(400).json({
+    res.status(error.code || 400).json({
       status: 'error',
       data: {
         message: error.message || 'Internal error',
@@ -89,7 +89,7 @@ usersRouter.put('/:userId', [authMiddleware], (req, res) => {
       data: usersStorage.updateById(userId, req.body),
     });
   } catch (error) {
-    res.status(400).json({
+    res.status(error.code || 400).json({
       status: 'error',
       data: {
         message: error.message || 'Internal error',
@@ -109,7 +109,7 @@ usersRouter.delete('/:userId', [authMiddleware], (req, res) => {
 
     res.sendStatus(204);
   } catch (error) {
-    res.status(400).json({
+    res.status(error.code || 400).json({
       status: 'error',
       data: {
         message: error.message || 'Internal error',

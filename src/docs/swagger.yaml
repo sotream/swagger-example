@@ -4,10 +4,21 @@ info:
   description: Optional multiline or single-line description in [CommonMark](http://commonmark.org/help/) or HTML.
   version: 1.0.7
 servers:
-  - url: http://localhost:3000/api/v1
+  - url: 'http://localhost:3000/api/v1'
     description: Users service version 1
-  - url: http://localhost:3000/api/v2
+  - url: '{protocol}://localhost:{port}/api/v2'
     description: Users service version 2
+    variables:
+      protocol:
+        enum:
+          - http
+          - https
+        default: http
+      port:
+        enum:
+          - 3000
+          - 4000
+        default: 3000
 
 paths:
   /auth/login:
@@ -24,7 +35,17 @@ paths:
               $ref: '#/components/schemas/LoginRequestBody'
       responses:
         200:
-          description: Authenticated user
+          description: Users authentication info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'   
+        401:
+          description: User not authorized error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotAuthorizedResponse'
 
   /users:
     post:
@@ -50,11 +71,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserResponse'
+
     get:
-      summary: Returns a list of users
+      summary: Return a list of users
       description: You also can query users by filter
       tags:
         - Users
+      security:
+        - bearerAuth: []
       parameters:
         - in: query
           name: 'filter'
@@ -86,13 +110,20 @@ paths:
                     items:
                       $ref: '#/components/schemas/User'
         401:
-          description: Unauthorized error
+          description: User not authorized error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotAuthorizedResponse'
+
   /users/{id}:
     get:
-      summary: Returns a user by identificator
+      summary: Return a user by identificator
       description: Docs description in *CommonMark*
       tags:
         - Users
+      security:
+        - bearerAuth: []
       parameters:
         - in: path
           name: 'id'
@@ -121,11 +152,25 @@ paths:
                     example: 'ok'
                   data:
                     $ref: '#/components/schemas/User'
+        401:
+          description: User not authorized error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotAuthorizedResponse'
+        404:
+          description: User not authorized error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
 
     put:
       summary: Update user
       tags:
         - Users
+      security:
+        - bearerAuth: []
       parameters:
         - in: path
           name: 'id'
@@ -152,9 +197,25 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserResponse'
+        401:
+          description: User not authorized error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotAuthorizedResponse'
+        404:
+          description: User not authorized error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
 
     delete:
       summary: Delete user
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
       parameters:
         - in: path
           name: 'id'
@@ -162,8 +223,6 @@ paths:
             type: string
           required: true
           description: User id
-      tags:
-        - Users
       responses:
         204:
           description: User deleted
@@ -172,8 +231,26 @@ paths:
               schema:
                 type: string
               description: Api version
+        401:
+          description: User not authorized error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotAuthorizedResponse'        
+        404:
+          description: User not authorized error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      
   schemas:
     User:
       type: object
@@ -181,7 +258,7 @@ components:
         id:
           type: integer
           description: The user ID
-          example: '99VBHFXNB22J'
+          example: 1
         name:
           type: string
           description: The user full name
@@ -217,12 +294,12 @@ components:
           type: string
           required: true
           description: The user email
-          example: jdou@example.com
+          example: jdou@test.com
         password:
           type: string
           required: true
           description: The user password
-          example: 'super-password'
+          example: '12345678'
 
     UserResponse:
       type: object
@@ -246,4 +323,44 @@ components:
             - 'error'
           example: 'ok'
         data:
-          $ref: '#/components/schemas/User'
+          type: object
+          properties:
+            accessToken:
+              type: string
+              required: true
+              description: Access token
+              example: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Impkb3VAdGVzdC5jb20iLCJpYXQiOjE2OTM2NTE5ODUsImV4cCI6MTY5MzY1NTU4NX0.asGtJQ1Qu6xU0l0bXF1zLyzyFq_3bTE3vXxcQxZCr_K_2cl6sg9NWyLA_cmPfenn2i4DdF_wW67vQ4oCMmA8DQ
+
+    NotAuthorizedResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          required: true
+          description: Request status
+          example: error
+        data:
+          type: object
+          properties: 
+            message:
+              type: string
+              required: true
+              description: Error message
+              example: "Wrong credentials"
+
+    NotFoundResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          required: true
+          description: Request status
+          example: error
+        data:
+          type: object
+          properties: 
+            message:
+              type: string
+              required: true
+              description: Error message
+              example: "User with id '1' not found"

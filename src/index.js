@@ -15,6 +15,19 @@ const swaggerDocument = YAML.parse(file);
 const app = express();
 const port = 3000;
 
+log4js.configure({
+  appenders: {
+    out: {
+      type: 'stdout',
+      layout: {
+        type: 'pattern',
+        pattern: '%[[%d{yyyy-MM-dd hh:mm:ss.SSS}] [%p] %c -%] %m',
+      },
+    },
+  },
+  categories: { default: { appenders: ['out'], level: 'debug' } },
+});
+
 const log = log4js.getLogger('main');
 
 log.level = 'debug';
@@ -22,12 +35,14 @@ log.level = 'debug';
 app.disable('x-powered-by');
 
 const options = {
-  explorer: true,
+  explorer: false,
 };
 
-app.use(bodyParser.json({
-  limit: '1kb',
-}));
+app.use(
+  bodyParser.json({
+    limit: '1kb',
+  }),
+);
 
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/users', usersRouter);

@@ -1,3 +1,42 @@
 {
-    "extends": "airbnb-base"
+  "env": {
+    "browser": true,
+    "es2022": true,
+    "node": true
+  },
+
+  "parserOptions": {
+    "ecmaVersion": 13,
+    "sourceType": "module"
+  },
+
+  "extends": "airbnb-base",
+
+  "rules": {
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "FunctionDeclaration",
+        "message": "Function declarations are not allowed."
+      },
+      {
+        "selector": "WithStatement",
+        "message": "With statements are not allowed."
+      },
+      {
+        "selector": "BinaryExpression[operator='in']",
+        "message": "Binary expressions [operator='in'] are not allowed."
+      },
+      {
+        "selector": "CallExpression[callee.name='setTimeout'][arguments.length!=2]",
+        "message": "setTimeout must always be invoked with two arguments."
+      }
+    ],
+    "lines-between-class-members": [
+      "error",
+      "always",
+      { "exceptAfterSingleLine": true }
+    ],
+    "no-plusplus": "off"
+  }
 }
