@@ -10,9 +10,11 @@ usersRouter.post('/', (req, res) => {
   try {
     res.setHeader('x-api-version', 'v1');
 
+    const createdUser = usersStorage.create(req.body);
+
     res.status(201).json({
       status: 'ok',
-      data: usersStorage.create(req.body),
+      data: createdUser,
     });
   } catch (error) {
     res.status(error.code || 400).json({
@@ -28,10 +30,10 @@ usersRouter.post('/', (req, res) => {
 usersRouter.get('/', [authMiddleware], (req, res) => {
   try {
     let users;
-    const { filter } = req.query;
+    const { filter, limit } = req.query;
 
-    if (filter) {
-      users = usersStorage.findByFilter(filter);
+    if (filter || limit) {
+      users = usersStorage.findByFilter(filter, false, limit);
     } else {
       users = usersStorage.findAll();
     }

@@ -29,13 +29,15 @@
 1. [Express](https://expressjs.com/)
 2. [Swagger](https://swagger.io/)
 
-## 1. Install dependencies
+## Run project locally
+
+### 1. Install dependencies
 
 ```bash
 npm install
 ```
 
-## 2. Run server in dev mode
+### 2. Run server in dev mode
 
 ```bash
 npm run dev

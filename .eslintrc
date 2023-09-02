@@ -10,6 +10,8 @@
     "sourceType": "module"
   },
 
+  "eslint.execArgv": ["--max_old_space_size=4096"],
+
   "extends": "airbnb-base",
 
   "rules": {

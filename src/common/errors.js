@@ -18,7 +18,17 @@ class NotAuthorizedError extends Error {
   }
 }
 
+class ValidationError extends Error {
+  constructor(message = 'Bad request', code = 400) {
+    super(message);
+
+    this.name = 'NotAuthorizedError';
+    this.code = code;
+  }
+}
+
 module.exports = {
   NotFoundError,
   NotAuthorizedError,
+  ValidationError,
 };
