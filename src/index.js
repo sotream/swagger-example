@@ -23,6 +23,7 @@ const options = {
 swaggerDocument.info.version = process.env.npm_package_version;
 
 app.use(express.static(__dirname));
+app.use(express.static('public'));
 
 app.use('*.css', (req, res, next) => {
   res.set('Content-Type', 'text/css');
